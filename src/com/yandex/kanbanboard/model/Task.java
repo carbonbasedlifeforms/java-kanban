@@ -1,15 +1,23 @@
+package com.yandex.kanbanboard.model;
+
 import java.util.Objects;
 
 public class Task {
+    private int id;
     private String name;
     private String description;
-    private int id;
+    // выставляем задаче статус NEW по дефолту
     protected TaskStatus status = TaskStatus.NEW;
 
     public Task(String name, String description) {
         this.name = name;
         this.description = description;
-        this.id = ++TaskManager.taskCounter;
+    }
+
+    public Task(String name, String description, TaskStatus status) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
     }
 
     public int getId() {
@@ -18,13 +26,6 @@ public class Task {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public Task getTaskById(int id) {
-        if (this.id == id) {
-            return this;
-        }
-        return null;
     }
 
     public String getName() {
@@ -37,6 +38,10 @@ public class Task {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public TaskStatus getStatus() {
@@ -62,11 +67,11 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", id=" + id +
-                ", status=" + status +
+        return this.getClass().getSimpleName() +
+                ":{ id=" + this.getId() +
+                ", name='" + this.getName() + '\'' +
+                ", description='" + this.getDescription() + '\'' +
+                ", status=" + this.getStatus() +
                 '}';
     }
 }
