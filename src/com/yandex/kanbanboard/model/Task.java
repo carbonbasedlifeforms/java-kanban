@@ -7,7 +7,7 @@ public class Task {
     private String name;
     private String description;
     // выставляем задаче статус NEW по дефолту
-    protected TaskStatus status = TaskStatus.NEW;
+    private TaskStatus status = TaskStatus.NEW;
 
     public Task(String name, String description) {
         this.name = name;
@@ -55,7 +55,7 @@ public class Task {
     @Override
     public boolean equals(Object object) {
         if (object instanceof Integer) {
-            return id == ((Integer) object).intValue();
+            return id == (Integer) object;
         }
         return false;
     }

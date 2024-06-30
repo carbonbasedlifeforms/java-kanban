@@ -1,7 +1,7 @@
 package com.yandex.kanbanboard.model;
 
 public class Subtask extends Task {
-    protected int epicId;
+    private final int epicId;
 
     public Subtask(String name, String description, TaskStatus status, int epicId) {
         super(name, description, status);
