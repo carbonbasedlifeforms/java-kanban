@@ -35,7 +35,7 @@ public class TaskManager {
     }
 
     public void deleteAllEpics() {
-        deleteAllSubTasks();
+        subTasks.clear();
         epics.clear();
     }
 
