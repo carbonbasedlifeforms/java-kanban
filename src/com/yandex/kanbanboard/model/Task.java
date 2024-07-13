@@ -20,6 +20,12 @@ public class Task {
         this.status = status;
     }
 
+    public Task(int id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
     public int getId() {
         return id;
     }
@@ -54,10 +60,9 @@ public class Task {
 
     @Override
     public boolean equals(Object object) {
-        if (object instanceof Integer) {
-            return id == (Integer) object;
-        }
-        return false;
+        if (this == object) return true;
+        if (!(object instanceof Task task)) return false;
+        return id == task.id;
     }
 
     @Override

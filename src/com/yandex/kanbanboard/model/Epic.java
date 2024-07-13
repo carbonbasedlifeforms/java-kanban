@@ -6,6 +6,10 @@ public class Epic extends Task {
     //привязанные к эпику ID сабтасок хранятся в его списке
     private final ArrayList<Integer> epicSubtasksIds = new ArrayList<>();
 
+    public Epic(int id, String name, String description) {
+        super(id, name, description);
+    }
+
     public Epic(String name, String description) {
         super(name, description);
     }
@@ -32,6 +36,5 @@ public class Epic extends Task {
         return super.toString() +
                 " epicSubtasksIds=" + epicSubtasksIds;
     }
-
 }
 
