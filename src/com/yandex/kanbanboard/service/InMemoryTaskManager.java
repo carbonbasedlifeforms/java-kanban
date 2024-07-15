@@ -2,28 +2,30 @@ package com.yandex.kanbanboard.service;
 import com.yandex.kanbanboard.model.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskManager, HistoryManager {
     private static int taskCounter = 0;
 
-    private final HashMap<Integer, Task> tasks = new HashMap<>();
-    private final HashMap<Integer, Subtask> subTasks = new HashMap<>();
-    private final HashMap<Integer, Epic> epics = new HashMap<>();
+    private final Map<Integer, Task> tasks = new HashMap<>();
+    private final Map<Integer, Subtask> subTasks = new HashMap<>();
+    private final Map<Integer, Epic> epics = new HashMap<>();
 
     HistoryManager historyManager = Managers.getDefaultHistory();
 
     @Override
-    public ArrayList<Task> getAllTasks() {
+    public List<Task> getAllTasks() {
         return new ArrayList<>(tasks.values());
     }
 
     @Override
-    public ArrayList<Subtask> getAllSubTasks() {
+    public List<Subtask> getAllSubTasks() {
         return new ArrayList<>(subTasks.values());
     }
 
     @Override
-    public ArrayList<Epic> getAllEpics() {
+    public List<Epic> getAllEpics() {
         return new ArrayList<>(epics.values());
     }
 
@@ -76,7 +78,6 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
 
     @Override
     public void deleteSubTaskById(int id) {
-//        Epic epic = getEpicById(getSubTaskById(id).getEpicId());
         Epic epic = epics.get(subTasks.get(id).getEpicId());
         epic.deleteSubTask(id);
         updateEpic(epic);
@@ -123,8 +124,8 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
 
     // получить список сабтасок из эпика
     @Override
-    public ArrayList<Subtask> getSubtasksForEpic(int id) {
-        ArrayList<Subtask> subtasksForEpic = new ArrayList<>();
+    public List<Subtask> getSubtasksForEpic(int id) {
+        List<Subtask> subtasksForEpic = new ArrayList<>();
         Epic epic = epics.get(id);
         if (epic == null) {
             System.out.println("Не найден эпик по id");
@@ -165,13 +166,14 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         }
     }
 
-    public ArrayList<Task> getHistory() {
+    @Override
+    public List<Task> getHistory() {
         return historyManager.getHistory();
     }
 
     private void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
-        ArrayList<Subtask> epicSubtasks = getSubtasksForEpic(epicId);
+        List<Subtask> epicSubtasks = getSubtasksForEpic(epicId);
         if (epicSubtasks == null || epicSubtasks.stream().allMatch(x -> x.getStatus().equals(TaskStatus.NEW))) {
             epic.setStatus(TaskStatus.NEW);
         } else if (epicSubtasks.stream().allMatch(x -> x.getStatus().equals(TaskStatus.DONE))) {

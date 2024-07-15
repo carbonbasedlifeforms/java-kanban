@@ -1,10 +1,11 @@
 package com.yandex.kanbanboard.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Epic extends Task {
     //привязанные к эпику ID сабтасок хранятся в его списке
-    private final ArrayList<Integer> epicSubtasksIds = new ArrayList<>();
+    private final List<Integer> epicSubtasksIds = new ArrayList<>();
 
     public Epic(int id, String name, String description) {
         super(id, name, description);
@@ -14,7 +15,7 @@ public class Epic extends Task {
         super(name, description);
     }
 
-    public ArrayList<Integer> getEpicSubtasksIds() {
+    public List<Integer> getEpicSubtasksIds() {
         return epicSubtasksIds;
     }
     // при создании сабтаски добавляем эту задачу в эпик в таскменеджере
