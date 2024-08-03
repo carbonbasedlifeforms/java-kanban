@@ -1,6 +1,6 @@
 package com.yandex.kanbanboard.service;
 
-public class Managers extends InMemoryTaskManager{
+public class Managers extends InMemoryTaskManager {
 
     public static TaskManager getDefault() {
         return new InMemoryTaskManager();
