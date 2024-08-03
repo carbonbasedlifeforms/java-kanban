@@ -2,7 +2,9 @@ package com.yandex.kanbanboard.service;
 
 import com.yandex.kanbanboard.model.Task;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class InMemoryHistoryManager implements HistoryManager {
