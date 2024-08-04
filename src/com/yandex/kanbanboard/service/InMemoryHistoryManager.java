@@ -9,10 +9,10 @@ import java.util.stream.Collectors;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
-    private final Map<Integer, Node<Task>> historyMap = new HashMap<>();
+    private final Map<Integer, Node> historyMap = new HashMap<>();
 
-    private Node<Task> head;
-    private Node<Task> tail;
+    private Node head;
+    private Node tail;
     private int size = 0;
 
     private List<Task> getTasks() {
@@ -22,9 +22,9 @@ public class InMemoryHistoryManager implements HistoryManager {
                 .collect(Collectors.toList());
     }
 
-    private Node<Task> linkLast(Task task) {
-        final Node<Task> oldTail = tail;
-        final Node<Task> newNode = new Node<>(task, tail, null);
+    private Node linkLast(Task task) {
+        final Node oldTail = tail;
+        final Node newNode = new Node(task, tail, null);
         tail = newNode;
         if (oldTail == null) {
             head = newNode;
@@ -35,7 +35,7 @@ public class InMemoryHistoryManager implements HistoryManager {
         return newNode;
     }
 
-    private void removeNode(Node<Task> node) {
+    private void removeNode(Node node) {
         if (node.getPrev() == null) {
             head = node.getNext();
         } else {
