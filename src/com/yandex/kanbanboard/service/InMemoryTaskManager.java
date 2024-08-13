@@ -74,6 +74,7 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     @Override
     public void deleteTaskById(int id) {
         tasks.remove(id);
+        historyManager.remove(id);
     }
 
     @Override
@@ -82,12 +83,17 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         epic.deleteSubTask(id);
         updateEpic(epic);
         subTasks.remove(id);
+        historyManager.remove(id);
     }
 
     @Override
     public void deleteEpicById(int id) {
-        epics.get(id).getEpicSubtasksIds().forEach(subTasks::remove);
+        List<Integer> epicSubtasksIds = epics.get(id).getEpicSubtasksIds();
+        epicSubtasksIds.forEach(historyManager::remove);
+        historyManager.remove(id);
+        epicSubtasksIds.forEach(subTasks::remove);
         epics.remove(id);
+        historyManager.remove(id);
     }
 
     // создать задачу, в качестве параметра передается сам объект

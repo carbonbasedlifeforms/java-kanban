@@ -36,4 +36,12 @@ class InMemoryHistoryManagerTest {
 
          System.out.println(historyManager.getHistory());
      }
+
+    @Test
+    void remove() {
+        historyManager.add(task);
+        historyManager.remove(task.getId());
+        final List<Task> history = historyManager.getHistory();
+        assertTrue(history.isEmpty(), "История пустая.");
+    }
 }

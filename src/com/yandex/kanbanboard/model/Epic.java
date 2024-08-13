@@ -18,7 +18,7 @@ public class Epic extends Task {
     public List<Integer> getEpicSubtasksIds() {
         return epicSubtasksIds;
     }
-    // при создании сабтаски добавляем эту задачу в эпик в таскменеджере
+
     public void addSubTaskToEpic(int id) {
         epicSubtasksIds.add(id);
     }

@@ -99,14 +99,15 @@ class InMemoryTaskManagerTest {
 
     @Test
     void deleteSubTaskById() {
-        assertNotNull(taskManager.getSubTaskById(subTask.getId()),
+        int subtaskId = subTask.getId();
+        assertNotNull(taskManager.getSubTaskById(subtaskId),
                 "Подзадача эпика должна возвращаться по ID");
         int subtaskEpicId = subTask.getEpicId();
-        assertTrue(taskManager.getEpicById(subtaskEpicId).getEpicSubtasksIds().contains(subTask.getId()),
+        assertTrue(taskManager.getEpicById(subtaskEpicId).getEpicSubtasksIds().contains(subtaskId),
                 "В Эпике должна быть подзадача");
-        taskManager.deleteSubTaskById(subTask.getId());
-        assertNull(taskManager.getSubTaskById(subTask.getId()), "Подзадачи не должно быть в списке подзадач");
-        assertFalse(taskManager.getEpicById(subtaskEpicId).getEpicSubtasksIds().contains(subTask.getId()),
+        taskManager.deleteSubTaskById(subtaskId);
+        assertNull(taskManager.getSubTaskById(subtaskId), "Подзадачи не должно быть в списке подзадач");
+        assertFalse(taskManager.getEpicById(subtaskEpicId).getEpicSubtasksIds().contains(subtaskId),
                 "В Эпике не должно быть удаленной подзадачи");
     }
 
