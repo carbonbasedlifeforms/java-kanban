@@ -47,4 +47,5 @@ public interface TaskManager {
 
     List<Task> getHistory();
 
+    void fillTaskManagerMaps(Task task);
 }

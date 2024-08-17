@@ -3,57 +3,32 @@ package com.yandex.kanbanboard;
 import com.yandex.kanbanboard.model.Epic;
 import com.yandex.kanbanboard.model.Subtask;
 import com.yandex.kanbanboard.model.Task;
-import com.yandex.kanbanboard.service.Managers;
-import com.yandex.kanbanboard.service.TaskManager;
+import com.yandex.kanbanboard.service.FileBackedTaskManager;
+
+import java.io.File;
 
 public class Main {
 
     public static void main(String[] args) {
         System.out.println("Поехали!");
 
-        TaskManager manager = Managers.getDefault();
-
-        Task task = new Task("Task 1", "Description 1");
-        manager.createTask(task);
-        Task task2 = new Task("Task 2", "Description 2");
-        manager.createTask(task2);
-        Epic epic = new Epic("Epic 1", "Description 1");
-        manager.createEpic(epic);
-        Epic epic2 = new Epic("Epic 2", "Description 2");
-        manager.createEpic(epic2);
-        Subtask subtask = new Subtask("Subtask 1", "Description 1", epic.getId());
-        Subtask subtask2 = new Subtask("Subtask 2", "Description 2", epic.getId());
-        Subtask subtask3 = new Subtask("Subtask 3", "Description 3", epic.getId());
-        System.out.println("-".repeat(10));
-        System.out.println(epic.getId());
-        manager.createSubtask(subtask);
-        manager.createSubtask(subtask2);
-        manager.createSubtask(subtask3);
-
-        System.out.println(manager.getHistory());
-        manager.getTaskById(task.getId());
-        System.out.println(manager.getHistory());
-        manager.getTaskById(task2.getId());
-        System.out.println(manager.getHistory());
-        manager.getTaskById(task.getId());
-        System.out.println(manager.getHistory());
-        manager.getTaskById(task2.getId());
-        System.out.println(manager.getHistory());
-        manager.getEpicById(epic.getId());
-        System.out.println(manager.getHistory());
-        manager.getSubTaskById(subtask.getId());
-        System.out.println(manager.getHistory());
-        manager.getSubTaskById(subtask2.getId());
-        System.out.println(manager.getHistory());
-        manager.getSubTaskById(subtask.getId());
-        System.out.println(manager.getHistory());
-        System.out.println("-".repeat(10));
-
-        manager.deleteTaskById(task.getId());
-        System.out.println(manager.getHistory());
-        manager.deleteSubTaskById(subtask.getId());
-        System.out.println(manager.getHistory());
-        manager.deleteEpicById(epic.getId());
-        System.out.println(manager.getHistory());
+        FileBackedTaskManager fileManager = FileBackedTaskManager.loadFromFile(new File("backup.csv"));
+        System.out.println(fileManager.getAllTasks());
+        System.out.println(fileManager.getAllEpics());
+        System.out.println(fileManager.getAllSubTasks());
+        Task task23 = new Task("Task 23", "Description 23");
+        fileManager.createTask(task23);
+        Task task42 = new Task("Task 42", "Description 42");
+        fileManager.createTask(task42);
+        Epic epic73 = new Epic("Epic 73", "Description 73");
+        fileManager.createEpic(epic73);
+        Epic epic404 = new Epic("Epic 404", "Description 404");
+        fileManager.createEpic(epic404);
+        Subtask subtask111 = new Subtask("Subtask 111", "Description 111", epic73.getId());
+        Subtask subtask222 = new Subtask("Subtask 222", "Description 222", epic73.getId());
+        Subtask subtask333 = new Subtask("Subtask 333", "Description 333", epic73.getId());
+        fileManager.createSubtask(subtask111);
+        fileManager.createSubtask(subtask222);
+        fileManager.createSubtask(subtask333);
     }
 }
