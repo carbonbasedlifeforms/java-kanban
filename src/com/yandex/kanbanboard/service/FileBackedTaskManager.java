@@ -5,11 +5,13 @@ import com.yandex.kanbanboard.model.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
-    private final File file;
+    private File file;
     public static final String DELIMITER_CSV = ",";
     public static final String FILE_HEADER = "id,type,name,status,description,epic";
 
@@ -38,19 +40,23 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
     }
 
-    public static FileBackedTaskManager loadFromFile(File file) {
+    public static FileBackedTaskManager loadFromFile(File file) throws IOException {
         FileBackedTaskManager fileManager = new FileBackedTaskManager(file);
         fileManager.loadFromFile();
         return fileManager;
     }
 
-    private void loadFromFile() {
+    private void loadFromFile() throws IOException {
         try (BufferedReader buffer = new BufferedReader(new FileReader(this.file, StandardCharsets.UTF_8))) {
             buffer.readLine();
             while (buffer.ready()) {
                 Task task = fromString(buffer.readLine());
                 fillTaskManagerMaps(task);
             }
+            getAllSubTasks().forEach(x -> restoreSubtasksListForEpic(x));
+        } catch (FileNotFoundException e) {
+            System.out.println();
+            file = Files.createFile(Path.of(file.getPath())).toFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -71,12 +77,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 case EPIC -> task = new Epic(id, name, description, status);
                 case SUBTASK -> {
                     task = new Subtask(id, name, description, status, epicId);
-                    getEpicById(epicId).addSubTaskToEpic(id);
                 }
             }
             return task;
         } catch (NumberFormatException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void restoreSubtasksListForEpic(Subtask subtask) {
+        Epic epic = getEpicById(subtask.getEpicId());
+        if (!epic.getEpicSubtasksIds().contains(subtask.getId())) {
+            epic.addSubTaskToEpic(subtask.getId());
         }
     }
 

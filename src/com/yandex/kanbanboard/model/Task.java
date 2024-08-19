@@ -9,6 +9,7 @@ public class Task {
     // выставляем задаче статус NEW по дефолту
     private TaskStatus status = TaskStatus.NEW;
     private int epicId;
+    private TaskTypes taskType = TaskTypes.TASK;
 
     public Task(String name, String description) {
         this.name = name;
@@ -67,7 +68,7 @@ public class Task {
     }
 
     public TaskTypes getTaskType() {
-        return TaskTypes.TASK;
+        return this.taskType;
     }
 
     public int getEpicId() {

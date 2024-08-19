@@ -5,14 +5,15 @@ import com.yandex.kanbanboard.model.Subtask;
 import com.yandex.kanbanboard.model.Task;
 import com.yandex.kanbanboard.service.FileBackedTaskManager;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         System.out.println("Поехали!");
 
-        FileBackedTaskManager fileManager = FileBackedTaskManager.loadFromFile(new File("backup.csv"));
+        FileBackedTaskManager fileManager = FileBackedTaskManager.loadFromFile(Paths.get("bcp.csv").toFile());
         System.out.println(fileManager.getAllTasks());
         System.out.println(fileManager.getAllEpics());
         System.out.println(fileManager.getAllSubTasks());

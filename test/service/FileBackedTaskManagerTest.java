@@ -16,39 +16,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FileBackedTaskManagerTest {
     static File file;
     FileBackedTaskManager fileManager;
+    FileBackedTaskManager initFileManager;
 
     Task task;
     Epic epic;
     Subtask subtask;
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEach() throws IOException {
         try {
             file = File.createTempFile("testFile", "csv");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        task = new Task("Task 1", "Description task 1");
+        epic = new Epic("Epic 1", "Epic epic 1");
+        initFileManager = FileBackedTaskManager.loadFromFile(file);
+        fileManager = FileBackedTaskManager.loadFromFile(file);
     }
 
     @Test
     void loadFromEmptyFile() {
-        fileManager = FileBackedTaskManager.loadFromFile(file);
         assertTrue(fileManager.getAll().isEmpty(), "Не пустой список всех типов задач, при загрузке пустого файла");
     }
 
     @Test
-    void loadFromFile() {
-        FileBackedTaskManager initFileManager = FileBackedTaskManager.loadFromFile(file);
-        fileManager = FileBackedTaskManager.loadFromFile(file);
+    void loadFromFile() throws IOException {
         assertTrue(fileManager.getAll().isEmpty(), "Не пустой список всех типов задач, при загрузке пустого файла");
-
-        task = new Task("Task 1", "Description task 1");
         initFileManager.createTask(task);
-        epic = new Epic("Epic 1", "Epic epic 1");
         initFileManager.createEpic(epic);
-        subtask = new Subtask("SubTask 1", "Description subtask 1", epic.getId());
-        initFileManager.createSubtask(subtask);
-
         fileManager = FileBackedTaskManager.loadFromFile(file);
         assertFalse(fileManager.getAllTasks().isEmpty(), "Пустой список задач, при загрузке не пустого файла");
     }

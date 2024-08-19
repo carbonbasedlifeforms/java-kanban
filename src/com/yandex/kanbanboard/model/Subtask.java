@@ -2,6 +2,7 @@ package com.yandex.kanbanboard.model;
 
 public class Subtask extends Task {
     private final int epicId;
+    private TaskTypes taskType = TaskTypes.SUBTASK;
 
     public Subtask(String name, String description, TaskStatus status, int epicId) {
         super(name, description, status);
@@ -30,7 +31,7 @@ public class Subtask extends Task {
 
     @Override
     public TaskTypes getTaskType() {
-        return TaskTypes.SUBTASK;
+        return taskType;
     }
 
     @Override
