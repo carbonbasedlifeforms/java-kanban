@@ -1,5 +1,10 @@
 package com.yandex.kanbanboard.service;
-import com.yandex.kanbanboard.model.*;
+
+import com.yandex.kanbanboard.model.Epic;
+import com.yandex.kanbanboard.model.Subtask;
+import com.yandex.kanbanboard.model.Task;
+import com.yandex.kanbanboard.model.TaskStatus;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -175,6 +180,16 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     @Override
     public List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    @Override
+    public void fillTaskManagerMaps(Task task) {
+        switch (task.getTaskType()) {
+            case TASK -> tasks.put(task.getId(), task);
+            case EPIC -> epics.put(task.getId(), (Epic) task);
+            case SUBTASK -> subTasks.put(task.getId(), (Subtask) task);
+        }
+        taskCounter = Math.max(taskCounter, task.getId());
     }
 
     private void updateEpicStatus(int epicId) {

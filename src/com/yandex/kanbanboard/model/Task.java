@@ -8,6 +8,7 @@ public class Task {
     private String description;
     // выставляем задаче статус NEW по дефолту
     private TaskStatus status = TaskStatus.NEW;
+    private final TaskTypes taskType = TaskTypes.TASK;
 
     public Task(String name, String description) {
         this.name = name;
@@ -24,6 +25,13 @@ public class Task {
         this.id = id;
         this.name = name;
         this.description = description;
+    }
+
+    public Task(int id, String name, String description, TaskStatus status) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.status = status;
     }
 
     public int getId() {
@@ -56,6 +64,10 @@ public class Task {
 
     public void setStatus(TaskStatus status) {
         this.status = status;
+    }
+
+    public TaskTypes getTaskType() {
+        return this.taskType;
     }
 
     @Override
