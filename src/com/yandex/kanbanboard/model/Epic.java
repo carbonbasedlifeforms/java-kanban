@@ -6,7 +6,7 @@ import java.util.List;
 public class Epic extends Task {
     //привязанные к эпику ID сабтасок хранятся в его списке
     private final List<Integer> epicSubtasksIds = new ArrayList<>();
-    private TaskTypes taskType = TaskTypes.EPIC;
+    private final TaskTypes taskType = TaskTypes.EPIC;
 
     public Epic(int id, String name, String description) {
         super(id, name, description);
@@ -35,11 +35,6 @@ public class Epic extends Task {
     public void clearAllEpicSubtasks() {
         epicSubtasksIds.clear();
         this.setStatus(TaskStatus.NEW);
-    }
-
-    @Override
-    public int getEpicId() {
-        return super.getEpicId();
     }
 
     @Override

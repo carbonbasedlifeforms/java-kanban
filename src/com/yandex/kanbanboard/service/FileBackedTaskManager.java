@@ -70,14 +70,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             String name = stringSplit[2].trim();
             TaskStatus status = TaskStatus.valueOf(stringSplit[3].trim());
             String description = stringSplit[4].trim();
-            int epicId = Integer.parseInt(stringSplit[5].trim());
 
             switch (Enum.valueOf(TaskTypes.class, stringSplit[1])) {
                 case TASK -> task = new Task(id, name, description, status);
                 case EPIC -> task = new Epic(id, name, description, status);
-                case SUBTASK -> {
-                    task = new Subtask(id, name, description, status, epicId);
-                }
+                case SUBTASK -> task = new Subtask(id, name, description, status,
+                        Integer.parseInt(stringSplit[5].trim()));
             }
             return task;
         } catch (NumberFormatException e) {
@@ -100,7 +98,19 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getName(),
                 task.getStatus().toString(),
                 task.getDescription(),
-                Integer.toString(task.getEpicId())
+                ""
+        );
+    }
+
+    private String toString(Subtask subtask) {
+        return String.join(
+                DELIMITER_CSV,
+                Integer.toString(subtask.getId()),
+                subtask.getTaskType().toString(),
+                subtask.getName(),
+                subtask.getStatus().toString(),
+                subtask.getDescription(),
+                Integer.toString(subtask.getEpicId())
         );
     }
 

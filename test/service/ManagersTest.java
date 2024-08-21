@@ -3,6 +3,9 @@ package service;
 import com.yandex.kanbanboard.service.*;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -22,8 +25,8 @@ class ManagersTest {
     }
 
     @Test
-    void getDefaultFileBackedTaskManager() {
-        FileBackedTaskManager fileBackedTaskManager = Managers.getDefaultFileBackedTaskManager();
+    void getDefaultFileBackedTaskManager() throws IOException {
+        FileBackedTaskManager fileBackedTaskManager = Managers.getDefaultFileBackedTaskManager(Files.createTempFile("test", "ext").toFile());
         assertNotNull(fileBackedTaskManager,
                 "Объект менеджера задач с сохранением в файл должен существовать");
         assertTrue(fileBackedTaskManager instanceof FileBackedTaskManager,
