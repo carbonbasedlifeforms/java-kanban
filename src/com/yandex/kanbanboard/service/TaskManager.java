@@ -48,4 +48,9 @@ public interface TaskManager {
     List<Task> getHistory();
 
     void fillTaskManagerMaps(Task task);
+
+    void addToSortedTasks(Task task);
+    List<Task> getPrioritizedTasks();
+
+    boolean checkTasksIntersect(Task task1, Task task2);
 }

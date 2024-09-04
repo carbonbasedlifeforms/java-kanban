@@ -1,23 +1,21 @@
 package com.yandex.kanbanboard.service;
 
-import com.yandex.kanbanboard.model.Epic;
-import com.yandex.kanbanboard.model.Subtask;
-import com.yandex.kanbanboard.model.Task;
-import com.yandex.kanbanboard.model.TaskStatus;
+import com.yandex.kanbanboard.exceptions.ValidationException;
+import com.yandex.kanbanboard.model.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
 public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskManager, HistoryManager {
-    private static int taskCounter = 0;
+    private int taskCounter = 0;
 
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Subtask> subTasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
-    private final TreeSet<Task> sortedTasks = new TreeSet<>(Comparator.comparing(x -> x.getStartTime()));
+    private final TreeSet<Task> sortedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 
-    HistoryManager historyManager = Managers.getDefaultHistory();
+    final HistoryManager historyManager = Managers.getDefaultHistory();
 
     @Override
     public List<Task> getAllTasks() {
@@ -97,7 +95,6 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     public void deleteEpicById(int id) {
         List<Integer> epicSubtasksIds = epics.get(id).getEpicSubtasksIds();
         epicSubtasksIds.forEach(historyManager::remove);
-//        historyManager.remove(id);
         epicSubtasksIds.forEach(subTasks::remove);
         epics.remove(id);
         historyManager.remove(id);
@@ -106,6 +103,10 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     // создать задачу, в качестве параметра передается сам объект
     @Override
     public Task createTask(Task task) {
+        if (getAllTasks().stream()
+                .anyMatch(x -> checkTasksIntersect(x, task))) {
+            throw new ValidationException("Задачи пересекаются");
+        }
         final int id = ++taskCounter;
         task.setId(id);
         tasks.put(task.getId(), task);
@@ -118,25 +119,26 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         final int id = ++taskCounter;
         epic.setId(id);
         epics.put(epic.getId(), epic);
-        sortedTasks.add(epic);
         return epic;
     }
 
     @Override
     public Subtask createSubtask(Subtask subtask) {
-        Epic epic = epics.get((subtask.getEpicId()));
-        if (epic == null) {
-            System.out.println("Не найден эпик по подзадаче");
-            return null;
-        }
-        final int id = ++taskCounter;
-        subtask.setId(id);
-        subTasks.put(subtask.getId(), subtask);
-        sortedTasks.add(subtask);
-        epic.addSubTaskToEpic(subtask.getId());
-        updateEpicStatus(epic.getId());
-        calcAndSetEpicTime(epics.get(subtask.getEpicId()));
-        return subtask;
+            if (getAllSubTasks().stream().anyMatch(x -> checkTasksIntersect(x, subtask)))
+                throw new ValidationException("Подзадачи пересекаются");
+            Epic epic = epics.get((subtask.getEpicId()));
+            if (epic == null) {
+                System.out.println("Не найден эпик по подзадаче");
+                return null;
+            }
+            final int id = ++taskCounter;
+            subtask.setId(id);
+            subTasks.put(subtask.getId(), subtask);
+            sortedTasks.add(subtask);
+            epic.addSubTaskToEpic(subtask.getId());
+            updateEpicStatus(epic.getId());
+            calcAndSetEpicTime(epics.get(subtask.getEpicId()));
+            return subtask;
     }
 
     // получить список сабтасок из эпика
@@ -146,7 +148,7 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         Epic epic = epics.get(id);
         if (epic == null) {
             System.out.println("Не найден эпик по id");
-            return null;
+            return Collections.emptyList();
         }
         // тут если реализовывать через стримы будет хуже читаться, поэтому оставил цикл
         for (Integer subtaskId : epic.getEpicSubtasksIds()) {
@@ -214,20 +216,41 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         }
     }
 
-    private void calcAndSetEpicTime(Epic epic) {
+    // не знаю как реализовать подобное через стримы в ОДНОМ прогоне как в цикле ниже:
+    // можно конечно сделать через несколько стримов но это будет медленнее чем в простом цикле
+    protected void calcAndSetEpicTime(Epic epic) {
         Duration epicDuration = Duration.ofMinutes(0);
-        LocalDateTime epicEndDate = LocalDateTime.MIN;
-        epic.setStartTime(sortedTasks.getFirst().getStartTime());
-//        epic.setDuration(Collections.max(getSubtasksForEpic(epic.getId(), Comparator.comparing(x -> x.getEndTime())));
-        getSubtasksForEpic(epic.getId())
-                .forEach(x -> {
-                    epic.setDuration(epicDuration.plus(x.getDuration()));
-                    if (x.getEndTime().isAfter(epicEndDate)) {
-                        epic.setEndTime(x.getEndTime());
-                    }
-                });
+        LocalDateTime epicEndTime = LocalDateTime.MIN;
+        LocalDateTime epicStartTime = LocalDateTime.MAX;
+        if (getSubtasksForEpic(epic.getId()).isEmpty())
+            return;
+        for (Subtask subtask : getSubtasksForEpic(epic.getId())) {
+            epicDuration = epicDuration.plus(subtask.getDuration());
+            epic.setDuration(epicDuration);
+            if (subtask.getStartTime().isBefore(epicStartTime)) {
+                epicStartTime = subtask.getStartTime();
+            }
+            if (subtask.getEndTime().isAfter(epicEndTime)) {
+                epicEndTime = subtask.getEndTime();
+            }
+        }
+        epic.setStartTime(epicStartTime);
+        epic.setEndTime(epicEndTime);
     }
 
+    @Override
+    public boolean checkTasksIntersect(Task task1, Task task2) {
+        return task1.getStartTime()
+                .isBefore(task2.getEndTime()) && task2.getStartTime().isBefore(task1.getEndTime());
+    }
+
+    @Override
+    public void addToSortedTasks(Task task) {
+        if (task.getStartTime() != null)
+            sortedTasks.add(task);
+    }
+
+    @Override
     public List<Task> getPrioritizedTasks() {
         return sortedTasks.stream()
                 .toList();

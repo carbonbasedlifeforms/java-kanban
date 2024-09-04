@@ -44,4 +44,12 @@ class InMemoryHistoryManagerTest {
         final List<Task> history = historyManager.getHistory();
         assertTrue(history.isEmpty(), "История пустая.");
     }
+
+    @Test
+    void CanAddDuplicate() {
+        historyManager.add(task);
+        historyManager.add(task);
+        final List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "В истории не должно быть дублирования");
+    }
 }

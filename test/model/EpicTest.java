@@ -14,8 +14,9 @@ class EpicTest {
     @BeforeEach
     void beforeEach() {
         epic = new Epic("epic name", "epic description");
-        subtask = new Subtask("subtask name","subtask description",epic.getId());
+        subtask = new Subtask("subtask name", "subtask description", epic.getId());
     }
+
     @Test
     void shouldTwoInstancesOfEpicIsEqualsByEqualsId() {
         Epic epic1 = new Epic(1, "epic1 name", "epic1 description");
@@ -32,7 +33,7 @@ class EpicTest {
 
     @Test
     void addSubTaskToEpic() {
-        Subtask newSubtask = new Subtask("New subtask","New subtask description",epic.getId());
+        Subtask newSubtask = new Subtask("New subtask", "New subtask description", epic.getId());
         epic.addSubTaskToEpic(newSubtask.getId());
         assertTrue(epic.getEpicSubtasksIds().contains(newSubtask.getId()));
     }

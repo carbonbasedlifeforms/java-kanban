@@ -10,13 +10,20 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryTaskManagerTest {
     private static TaskManager taskManager;
     private Task task;
+    private Task taskIntersect;
     private Subtask subTask;
+    private Subtask anotherSubTask;
     private Epic epic;
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @BeforeAll
     static void beforeAll() {
@@ -25,14 +32,27 @@ class InMemoryTaskManagerTest {
 
     @BeforeEach
     void setUp() {
-        task = new Task("Test add new Task", "Test task description");
+        taskManager.deleteAllTasks();
+        taskManager.deleteAllSubTasks();
+        taskManager.deleteAllEpics();
+        task = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
+                LocalDateTime.parse("2024-09-03 12:00:00", dateTimeFormatter));
+        Task anotherTask = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
+                LocalDateTime.parse("2024-09-03 11:00:00", dateTimeFormatter));
+        taskIntersect = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
+                LocalDateTime.parse("2024-09-03 12:00:00", dateTimeFormatter));
         epic = new Epic("Test add new Epic", "Test epic description");
 
         taskManager.createTask(task);
+        taskManager.createTask(anotherTask);
         taskManager.createEpic(epic);
 
-        subTask = new Subtask("Test add new Subtask", "Test subtask description", epic.getId());
+        subTask = new Subtask("Test add new Subtask", "Test subtask description", TaskStatus.NEW,
+                epic.getId(), 1, LocalDateTime.parse("2024-09-03 16:00:00", dateTimeFormatter));
+        anotherSubTask = new Subtask("Test add new Subtask 2", "Test subtask description 2", TaskStatus.NEW,
+                epic.getId(), 1, LocalDateTime.parse("2024-09-03 15:00:00", dateTimeFormatter));
         taskManager.createSubtask(subTask);
+        taskManager.createSubtask(anotherSubTask);
     }
 
     @Test
@@ -178,5 +198,25 @@ class InMemoryTaskManagerTest {
         assertEquals(updatedSubtask.getName(), "New subtask name");
         assertEquals(updatedSubtask.getDescription(), "New subtask description");
         assertEquals(updatedSubtask.getStatus(), TaskStatus.DONE);
+    }
+
+    @Test
+    void getPrioritizedTasks() {
+        List<Task> prioritizedTasks = taskManager.getPrioritizedTasks();
+        assertFalse(prioritizedTasks.isEmpty(), "Список отсортированный задач не должен быть пустым");
+        assertEquals(4, prioritizedTasks.size());
+        assertTrue(prioritizedTasks.getFirst().getStartTime().isBefore(prioritizedTasks.getLast().getStartTime()));
+    }
+
+    @Test
+    void checkEpicTime() {
+        assertEquals(epic.getStartTime(), anotherSubTask.getStartTime());
+        assertEquals(epic.getEndTime(), subTask.getEndTime());
+        assertEquals(epic.getDuration(), subTask.getDuration().plus(anotherSubTask.getDuration()));
+    }
+
+    @Test
+    void checkTasksIntersect() {
+        assertTrue(taskManager.checkTasksIntersect(task, taskIntersect));
     }
 }

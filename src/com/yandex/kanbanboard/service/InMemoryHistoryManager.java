@@ -16,8 +16,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     private int size = 0;
 
     private List<Task> getTasks() {
-        return historyMap.values()
-                .stream()
+        return historyMap.values().stream()
                 .map(Node::getValue)
                 .collect(Collectors.toList());
     }

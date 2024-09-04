@@ -6,22 +6,21 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ManagersTest {
     @Test
     void getDefault() {
         TaskManager manager = Managers.getDefault();
         assertNotNull(manager, "Объект менеджера задач должен существовать");
-        assertTrue(manager instanceof InMemoryTaskManager, "Класс объекта: InMemoryTaskManager");
+        assertInstanceOf(InMemoryTaskManager.class, manager, "Класс объекта: InMemoryTaskManager");
     }
 
     @Test
     void getDefaultHistory() {
         HistoryManager history = Managers.getDefaultHistory();
         assertNotNull(history, "Объект менеджера истории задач должен существовать");
-        assertTrue(history instanceof InMemoryHistoryManager, "Класс объекта: InMemoryHistoryManager");
+        assertInstanceOf(InMemoryHistoryManager.class, history, "Класс объекта: InMemoryHistoryManager");
     }
 
     @Test
@@ -29,7 +28,6 @@ class ManagersTest {
         FileBackedTaskManager fileBackedTaskManager = Managers.getDefaultFileBackedTaskManager(Files.createTempFile("test", "ext").toFile());
         assertNotNull(fileBackedTaskManager,
                 "Объект менеджера задач с сохранением в файл должен существовать");
-        assertTrue(fileBackedTaskManager instanceof FileBackedTaskManager,
-                "Класс объекта: InMemoryTaskManager");
+        assertInstanceOf(FileBackedTaskManager.class, fileBackedTaskManager, "Класс объекта: InMemoryTaskManager");
     }
 }

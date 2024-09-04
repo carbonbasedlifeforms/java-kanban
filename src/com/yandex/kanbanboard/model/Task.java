@@ -13,7 +13,7 @@ public class Task {
     private final TaskTypes taskType = TaskTypes.TASK;
     //
     private Duration duration = Duration.ofMinutes(0);
-    private LocalDateTime startTime = LocalDateTime.now();
+    private LocalDateTime startTime;
     private LocalDateTime endTime;
 
     public Task(String name, String description) {
@@ -133,11 +133,15 @@ public class Task {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() +
-                ":{ id=" + this.getId() +
-                ", name='" + this.getName() + '\'' +
-                ", description='" + this.getDescription() + '\'' +
-                ", status=" + this.getStatus() +
+        return "Task{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", status=" + status +
+                ", taskType=" + taskType +
+                ", duration=" + duration.toMinutes() +
+                ", startTime=" + startTime +
+                ", endTime=" + endTime +
                 '}';
     }
 }
