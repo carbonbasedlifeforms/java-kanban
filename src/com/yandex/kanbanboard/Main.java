@@ -42,7 +42,7 @@ public class Main {
         System.out.println("sorted list:");
         fileManager.getPrioritizedTasks()
                 .forEach(x -> System.out.println(x.getId() + " : " + x.getTaskType()
-                        + " : " + x.getDuration().toMinutes() + " : " + x.getStartTime() + " : " + x.getEndTime()) );
+                        + " : " + x.getDuration().toMinutes() + " : " + x.getStartTime() + " : " + x.getEndTime()));
 
     }
 }
