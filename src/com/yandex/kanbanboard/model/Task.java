@@ -46,7 +46,7 @@ public class Task {
         this.status = status;
         this.duration = Duration.ofMinutes(duration);
         this.startTime = startTime;
-        this.endTime = startTime.plus(Duration.ofMinutes(duration));
+        this.endTime = startTime == null ? null : startTime.plus(Duration.ofMinutes(duration));
     }
 
     public Task(int id, String name, String description, TaskStatus status, int duration, LocalDateTime startTime) {
@@ -56,7 +56,7 @@ public class Task {
         this.status = status;
         this.duration = Duration.ofMinutes(duration);
         this.startTime = startTime;
-        this.endTime = startTime.plus(Duration.ofMinutes(duration));
+        this.endTime = startTime == null ? null : startTime.plus(Duration.ofMinutes(duration));
     }
 
     public int getId() {
@@ -133,15 +133,15 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", status=" + status +
-                ", taskType=" + taskType +
-                ", duration=" + duration.toMinutes() +
-                ", startTime=" + startTime +
-                ", endTime=" + endTime +
+        return this.getClass().getSimpleName() +
+                "{: id=" + this.getId() +
+                ", name='" + this.getName() + '\'' +
+                ", description='" + this.getDescription() + '\'' +
+                ", status=" + this.getStatus() +
+                ", taskType=" + this.getTaskType() +
+                ", duration=" + this.getDuration().toMinutes() +
+                ", startTime=" + this.getStartTime() +
+                ", endTime=" + this.getEndTime() +
                 '}';
     }
 }

@@ -23,7 +23,7 @@ class InMemoryTaskManagerTest {
     private Subtask subTask;
     private Subtask anotherSubTask;
     private Epic epic;
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FORMAT_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @BeforeAll
     static void beforeAll() {
@@ -36,11 +36,11 @@ class InMemoryTaskManagerTest {
         taskManager.deleteAllSubTasks();
         taskManager.deleteAllEpics();
         task = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
-                LocalDateTime.parse("2024-09-03 12:00:00", dateTimeFormatter));
+                LocalDateTime.parse("2024-09-03 12:00:00", FORMAT_PATTERN));
         Task anotherTask = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
-                LocalDateTime.parse("2024-09-03 11:00:00", dateTimeFormatter));
+                LocalDateTime.parse("2024-09-03 11:00:00", FORMAT_PATTERN));
         taskIntersect = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
-                LocalDateTime.parse("2024-09-03 12:00:00", dateTimeFormatter));
+                LocalDateTime.parse("2024-09-03 12:00:00", FORMAT_PATTERN));
         epic = new Epic("Test add new Epic", "Test epic description");
 
         taskManager.createTask(task);
@@ -48,9 +48,9 @@ class InMemoryTaskManagerTest {
         taskManager.createEpic(epic);
 
         subTask = new Subtask("Test add new Subtask", "Test subtask description", TaskStatus.NEW,
-                epic.getId(), 1, LocalDateTime.parse("2024-09-03 16:00:00", dateTimeFormatter));
+                epic.getId(), 1, LocalDateTime.parse("2024-09-03 16:00:00", FORMAT_PATTERN));
         anotherSubTask = new Subtask("Test add new Subtask 2", "Test subtask description 2", TaskStatus.NEW,
-                epic.getId(), 1, LocalDateTime.parse("2024-09-03 15:00:00", dateTimeFormatter));
+                epic.getId(), 1, LocalDateTime.parse("2024-09-03 15:00:00", FORMAT_PATTERN));
         taskManager.createSubtask(subTask);
         taskManager.createSubtask(anotherSubTask);
     }

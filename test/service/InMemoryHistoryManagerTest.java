@@ -31,10 +31,7 @@ class InMemoryHistoryManagerTest {
      @Test
     void getHistory() {
          historyManager.add(task);
-         task.setName("Edited name");
-         task.setDescription("Edited description");
-
-         System.out.println(historyManager.getHistory());
+         assertTrue(historyManager.getHistory().contains(task), "В истории должна быть задача");
      }
 
     @Test

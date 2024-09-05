@@ -77,10 +77,13 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             String name = stringSplit[2].trim();
             TaskStatus status = TaskStatus.valueOf(stringSplit[3].trim());
             String description = stringSplit[4].trim();
+            String startTimeAsString = stringSplit[7].trim();
+            LocalDateTime startTime = startTimeAsString.equals("null") ? null
+                    : LocalDateTime.parse(startTimeAsString, FORMAT_PATTERN);
 
             switch (Enum.valueOf(TaskTypes.class, stringSplit[1])) {
-                case TASK -> task = new Task(id, name, description, status, Integer.parseInt(stringSplit[6].trim()),
-                        LocalDateTime.parse(stringSplit[7].trim(), FORMAT_PATTERN));
+                case TASK -> task = new Task(id, name, description, status,
+                        Integer.parseInt(stringSplit[6].trim()), startTime);
                 case EPIC -> task = new Epic(id, name, description, status);
                 case SUBTASK -> task = new Subtask(id, name, description, status,
                         Integer.parseInt(stringSplit[5].trim()), Integer.parseInt(stringSplit[6].trim()),
@@ -109,7 +112,8 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getDescription(),
                 "",
                 task.getTaskType() == TaskTypes.EPIC ? "" : Long.toString(task.getDuration().toMinutes()),
-                task.getTaskType() == TaskTypes.EPIC ? "" : task.getStartTime().format(FORMAT_PATTERN)
+                task.getTaskType() == TaskTypes.EPIC || task.getStartTime() == null ? "null"
+                        : task.getStartTime().format(FORMAT_PATTERN)
         );
     }
 
@@ -123,7 +127,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 subtask.getDescription(),
                 Integer.toString(subtask.getEpicId()),
                 Long.toString(subtask.getDuration().toMinutes()),
-                subtask.getStartTime().format(FORMAT_PATTERN)
+                subtask.getStartTime() == null ? "null" : subtask.getStartTime().format(FORMAT_PATTERN)
         );
     }
 

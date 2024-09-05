@@ -17,14 +17,14 @@ import java.time.format.DateTimeFormatter;
 import static org.junit.jupiter.api.Assertions.*;
 
 class FileBackedTaskManagerTest {
-    static File file;
-    FileBackedTaskManager fileManager;
-    FileBackedTaskManager initFileManager;
+    private static File file;
+    private FileBackedTaskManager fileManager;
+    private FileBackedTaskManager initFileManager;
 
-    Task task;
-    Epic epic;
-    Subtask subtask;
-    final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private Task task;
+    private Epic epic;
+    private Subtask subtask;
+    private static final DateTimeFormatter FORMAT_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @BeforeEach
     void beforeEach() throws IOException {
@@ -34,7 +34,7 @@ class FileBackedTaskManagerTest {
             throw new RuntimeException(e);
         }
         task = new Task("Task 1", "Description task 1", TaskStatus.NEW, 100,
-                LocalDateTime.parse("2020-01-01 00:00:00", dateFormat));
+                LocalDateTime.parse("2020-01-01 00:00:00", FORMAT_PATTERN));
         epic = new Epic("Epic 1", "Epic epic 1");
         initFileManager = FileBackedTaskManager.loadFromFile(file);
         fileManager = FileBackedTaskManager.loadFromFile(file);

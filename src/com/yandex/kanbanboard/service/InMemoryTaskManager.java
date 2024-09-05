@@ -15,7 +15,7 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     private final Map<Integer, Epic> epics = new HashMap<>();
     private final TreeSet<Task> sortedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 
-    final HistoryManager historyManager = Managers.getDefaultHistory();
+    HistoryManager historyManager = Managers.getDefaultHistory();
 
     @Override
     public List<Task> getAllTasks() {
@@ -110,7 +110,10 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         final int id = ++taskCounter;
         task.setId(id);
         tasks.put(task.getId(), task);
-        sortedTasks.add(task);
+        // не добавляем в TreeSet сортированный по дате старта, если дата старта не задана
+        if (task.getStartTime() != null) {
+            sortedTasks.add(task);
+        }
         return task;
     }
 
@@ -124,21 +127,26 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
 
     @Override
     public Subtask createSubtask(Subtask subtask) {
-            if (getAllSubTasks().stream().anyMatch(x -> checkTasksIntersect(x, subtask)))
-                throw new ValidationException("Подзадачи пересекаются");
-            Epic epic = epics.get((subtask.getEpicId()));
-            if (epic == null) {
-                System.out.println("Не найден эпик по подзадаче");
-                return null;
-            }
-            final int id = ++taskCounter;
-            subtask.setId(id);
-            subTasks.put(subtask.getId(), subtask);
+        if (getAllSubTasks().stream()
+                .filter(x -> x.getStartTime() != null)
+                .anyMatch(x -> checkTasksIntersect(x, subtask)))
+            throw new ValidationException("Подзадачи пересекаются");
+        Epic epic = epics.get((subtask.getEpicId()));
+        if (epic == null) {
+            System.out.println("Не найден эпик по подзадаче");
+            return null;
+        }
+        final int id = ++taskCounter;
+        subtask.setId(id);
+        subTasks.put(subtask.getId(), subtask);
+        // не добавляем в TreeSet сортированный по дате старта, если дата старта не задана
+        epic.addSubTaskToEpic(subtask.getId());
+        updateEpicStatus(epic.getId());
+        if (subtask.getStartTime() != null) {
             sortedTasks.add(subtask);
-            epic.addSubTaskToEpic(subtask.getId());
-            updateEpicStatus(epic.getId());
             calcAndSetEpicTime(epics.get(subtask.getEpicId()));
-            return subtask;
+        }
+        return subtask;
     }
 
     // получить список сабтасок из эпика
@@ -216,30 +224,33 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         }
     }
 
-    // не знаю как реализовать подобное через стримы в ОДНОМ прогоне как в цикле ниже:
-    // можно конечно сделать через несколько стримов но это будет медленнее чем в простом цикле
     protected void calcAndSetEpicTime(Epic epic) {
-        Duration epicDuration = Duration.ofMinutes(0);
+        Duration epicDuration;
         LocalDateTime epicEndTime = LocalDateTime.MIN;
         LocalDateTime epicStartTime = LocalDateTime.MAX;
-        if (getSubtasksForEpic(epic.getId()).isEmpty())
+        List<Subtask> subtasks = getSubtasksForEpic(epic.getId());
+        if (subtasks.isEmpty())
             return;
-        for (Subtask subtask : getSubtasksForEpic(epic.getId())) {
-            epicDuration = epicDuration.plus(subtask.getDuration());
-            epic.setDuration(epicDuration);
-            if (subtask.getStartTime().isBefore(epicStartTime)) {
-                epicStartTime = subtask.getStartTime();
-            }
-            if (subtask.getEndTime().isAfter(epicEndTime)) {
-                epicEndTime = subtask.getEndTime();
-            }
-        }
+        epicDuration = subtasks.stream()
+                .map(Subtask::getDuration)
+                .reduce(Duration.ZERO, Duration::plus);
+        epic.setDuration(epicDuration);
+        epicStartTime = subtasks.stream()
+                .min(Comparator.comparing(Subtask::getStartTime))
+                .map(Subtask::getStartTime)
+                .orElse(epicStartTime);
+        epicEndTime = subtasks.stream()
+                .max(Comparator.comparing(Subtask::getEndTime))
+                .map(Subtask::getEndTime)
+                .orElse(epicEndTime);
         epic.setStartTime(epicStartTime);
         epic.setEndTime(epicEndTime);
     }
 
     @Override
     public boolean checkTasksIntersect(Task task1, Task task2) {
+        if (task1.getStartTime() == null || task2.getStartTime() == null)
+            return false;
         return task1.getStartTime()
                 .isBefore(task2.getEndTime()) && task2.getStartTime().isBefore(task1.getEndTime());
     }
