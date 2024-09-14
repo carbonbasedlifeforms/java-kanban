@@ -1,5 +1,7 @@
 package com.yandex.kanbanboard.model;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -9,6 +11,10 @@ public class Task {
     // выставляем задаче статус NEW по дефолту
     private TaskStatus status = TaskStatus.NEW;
     private final TaskTypes taskType = TaskTypes.TASK;
+    //
+    private Duration duration = Duration.ofMinutes(0);
+    private LocalDateTime startTime;
+    private LocalDateTime endTime;
 
     public Task(String name, String description) {
         this.name = name;
@@ -32,6 +38,25 @@ public class Task {
         this.name = name;
         this.description = description;
         this.status = status;
+    }
+
+    public Task(String name, String description, TaskStatus status, int duration, LocalDateTime startTime) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.duration = Duration.ofMinutes(duration);
+        this.startTime = startTime;
+        this.endTime = startTime == null ? null : startTime.plus(Duration.ofMinutes(duration));
+    }
+
+    public Task(int id, String name, String description, TaskStatus status, int duration, LocalDateTime startTime) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.duration = Duration.ofMinutes(duration);
+        this.startTime = startTime;
+        this.endTime = startTime == null ? null : startTime.plus(Duration.ofMinutes(duration));
     }
 
     public int getId() {
@@ -67,7 +92,31 @@ public class Task {
     }
 
     public TaskTypes getTaskType() {
-        return this.taskType;
+        return taskType;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     @Override
@@ -85,10 +134,14 @@ public class Task {
     @Override
     public String toString() {
         return this.getClass().getSimpleName() +
-                ":{ id=" + this.getId() +
+                "{: id=" + this.getId() +
                 ", name='" + this.getName() + '\'' +
                 ", description='" + this.getDescription() + '\'' +
                 ", status=" + this.getStatus() +
+                ", taskType=" + this.getTaskType() +
+                ", duration=" + this.getDuration().toMinutes() +
+                ", startTime=" + this.getStartTime() +
+                ", endTime=" + this.getEndTime() +
                 '}';
     }
 }

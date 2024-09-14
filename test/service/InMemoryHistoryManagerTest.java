@@ -31,10 +31,7 @@ class InMemoryHistoryManagerTest {
      @Test
     void getHistory() {
          historyManager.add(task);
-         task.setName("Edited name");
-         task.setDescription("Edited description");
-
-         System.out.println(historyManager.getHistory());
+         assertTrue(historyManager.getHistory().contains(task), "В истории должна быть задача");
      }
 
     @Test
@@ -43,5 +40,13 @@ class InMemoryHistoryManagerTest {
         historyManager.remove(task.getId());
         final List<Task> history = historyManager.getHistory();
         assertTrue(history.isEmpty(), "История пустая.");
+    }
+
+    @Test
+    void CanAddDuplicate() {
+        historyManager.add(task);
+        historyManager.add(task);
+        final List<Task> history = historyManager.getHistory();
+        assertEquals(1, history.size(), "В истории не должно быть дублирования");
     }
 }

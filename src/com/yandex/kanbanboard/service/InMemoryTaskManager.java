@@ -1,21 +1,19 @@
 package com.yandex.kanbanboard.service;
 
-import com.yandex.kanbanboard.model.Epic;
-import com.yandex.kanbanboard.model.Subtask;
-import com.yandex.kanbanboard.model.Task;
-import com.yandex.kanbanboard.model.TaskStatus;
+import com.yandex.kanbanboard.exceptions.ValidationException;
+import com.yandex.kanbanboard.model.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 
 public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskManager, HistoryManager {
-    private static int taskCounter = 0;
+    private int taskCounter = 0;
 
     private final Map<Integer, Task> tasks = new HashMap<>();
     private final Map<Integer, Subtask> subTasks = new HashMap<>();
     private final Map<Integer, Epic> epics = new HashMap<>();
+    private final TreeSet<Task> sortedTasks = new TreeSet<>(Comparator.comparing(Task::getStartTime));
 
     HistoryManager historyManager = Managers.getDefaultHistory();
 
@@ -36,21 +34,23 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
 
     @Override
     public void deleteAllTasks() {
+        sortedTasks.removeAll(tasks.values());
         tasks.clear();
     }
 
     @Override
     public void deleteAllSubTasks() {
+        sortedTasks.removeAll(subTasks.values());
         subTasks.clear();
-        for (Epic epic : getAllEpics()) {
-            //статус эпика переходит в NEW после удаления всех подзадач в методе clearAllEpicSubtasks
-            epic.clearAllEpicSubtasks();
-        }
+        //статус эпика переходит в NEW после удаления всех подзадач в методе clearAllEpicSubtasks
+        getAllEpics().forEach(Epic::clearAllEpicSubtasks);
     }
 
     @Override
     public void deleteAllEpics() {
+        sortedTasks.removeAll(subTasks.values());
         subTasks.clear();
+        sortedTasks.removeAll(epics.values());
         epics.clear();
     }
 
@@ -95,7 +95,6 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     public void deleteEpicById(int id) {
         List<Integer> epicSubtasksIds = epics.get(id).getEpicSubtasksIds();
         epicSubtasksIds.forEach(historyManager::remove);
-        historyManager.remove(id);
         epicSubtasksIds.forEach(subTasks::remove);
         epics.remove(id);
         historyManager.remove(id);
@@ -104,9 +103,17 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     // создать задачу, в качестве параметра передается сам объект
     @Override
     public Task createTask(Task task) {
+        if (getAllTasks().stream()
+                .anyMatch(x -> checkTasksIntersect(x, task))) {
+            throw new ValidationException("Задачи пересекаются");
+        }
         final int id = ++taskCounter;
         task.setId(id);
         tasks.put(task.getId(), task);
+        // не добавляем в TreeSet сортированный по дате старта, если дата старта не задана
+        if (task.getStartTime() != null) {
+            sortedTasks.add(task);
+        }
         return task;
     }
 
@@ -120,6 +127,10 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
 
     @Override
     public Subtask createSubtask(Subtask subtask) {
+        if (getAllSubTasks().stream()
+                .filter(x -> x.getStartTime() != null)
+                .anyMatch(x -> checkTasksIntersect(x, subtask)))
+            throw new ValidationException("Подзадачи пересекаются");
         Epic epic = epics.get((subtask.getEpicId()));
         if (epic == null) {
             System.out.println("Не найден эпик по подзадаче");
@@ -128,8 +139,13 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         final int id = ++taskCounter;
         subtask.setId(id);
         subTasks.put(subtask.getId(), subtask);
+        // не добавляем в TreeSet сортированный по дате старта, если дата старта не задана
         epic.addSubTaskToEpic(subtask.getId());
-        updateEpicStatus(subtask.getEpicId());
+        updateEpicStatus(epic.getId());
+        if (subtask.getStartTime() != null) {
+            sortedTasks.add(subtask);
+            calcAndSetEpicTime(epics.get(subtask.getEpicId()));
+        }
         return subtask;
     }
 
@@ -140,8 +156,9 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         Epic epic = epics.get(id);
         if (epic == null) {
             System.out.println("Не найден эпик по id");
-            return null;
+            return Collections.emptyList();
         }
+        // тут если реализовывать через стримы будет хуже читаться, поэтому оставил цикл
         for (Integer subtaskId : epic.getEpicSubtasksIds()) {
             subtasksForEpic.add(subTasks.get(subtaskId));
         }
@@ -174,6 +191,7 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
         } else {
             subTasks.replace(subtask.getId(), subtask);
             updateEpicStatus(subtask.getEpicId());
+            calcAndSetEpicTime(epics.get(subtask.getEpicId()));
         }
     }
 
@@ -195,12 +213,57 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     private void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
         List<Subtask> epicSubtasks = getSubtasksForEpic(epicId);
-        if (epicSubtasks == null || epicSubtasks.stream().allMatch(x -> x.getStatus().equals(TaskStatus.NEW))) {
+        if (epicSubtasks == null || epicSubtasks.stream()
+                .allMatch(x -> x.getStatus().equals(TaskStatus.NEW))) {
             epic.setStatus(TaskStatus.NEW);
-        } else if (epicSubtasks.stream().allMatch(x -> x.getStatus().equals(TaskStatus.DONE))) {
+        } else if (epicSubtasks.stream()
+                .allMatch(x -> x.getStatus().equals(TaskStatus.DONE))) {
             epic.setStatus(TaskStatus.DONE);
         } else {
             epic.setStatus(TaskStatus.IN_PROGRESS);
         }
+    }
+
+    protected void calcAndSetEpicTime(Epic epic) {
+        Duration epicDuration;
+        LocalDateTime epicEndTime = LocalDateTime.MIN;
+        LocalDateTime epicStartTime = LocalDateTime.MAX;
+        List<Subtask> subtasks = getSubtasksForEpic(epic.getId());
+        if (subtasks.isEmpty())
+            return;
+        epicDuration = subtasks.stream()
+                .map(Subtask::getDuration)
+                .reduce(Duration.ZERO, Duration::plus);
+        epic.setDuration(epicDuration);
+        epicStartTime = subtasks.stream()
+                .min(Comparator.comparing(Subtask::getStartTime))
+                .map(Subtask::getStartTime)
+                .orElse(epicStartTime);
+        epicEndTime = subtasks.stream()
+                .max(Comparator.comparing(Subtask::getEndTime))
+                .map(Subtask::getEndTime)
+                .orElse(epicEndTime);
+        epic.setStartTime(epicStartTime);
+        epic.setEndTime(epicEndTime);
+    }
+
+    @Override
+    public boolean checkTasksIntersect(Task task1, Task task2) {
+        if (task1.getStartTime() == null || task2.getStartTime() == null)
+            return false;
+        return task1.getStartTime()
+                .isBefore(task2.getEndTime()) && task2.getStartTime().isBefore(task1.getEndTime());
+    }
+
+    @Override
+    public void addToSortedTasks(Task task) {
+        if (task.getStartTime() != null)
+            sortedTasks.add(task);
+    }
+
+    @Override
+    public List<Task> getPrioritizedTasks() {
+        return sortedTasks.stream()
+                .toList();
     }
 }

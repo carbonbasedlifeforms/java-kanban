@@ -7,13 +7,16 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private File file;
     public static final String DELIMITER_CSV = ",";
-    public static final String FILE_HEADER = "id,type,name,status,description,epic";
+    public static final String FILE_HEADER = "id,type,name,status,description,epic,duration,start_time";
+    public static final DateTimeFormatter FORMAT_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public FileBackedTaskManager(File file) {
         this.file = file;
@@ -52,8 +55,12 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             while (buffer.ready()) {
                 Task task = fromString(buffer.readLine());
                 fillTaskManagerMaps(task);
+                if (!task.getTaskType().equals(TaskTypes.EPIC)) {
+                    addToSortedTasks(task);
+                }
             }
-            getAllSubTasks().forEach(x -> restoreSubtasksListForEpic(x));
+            getAllSubTasks().forEach(this::restoreSubtasksListForEpic);
+            getAllEpics().forEach(this::calcAndSetEpicTime);
         } catch (FileNotFoundException e) {
             System.out.println();
             file = Files.createFile(Path.of(file.getPath())).toFile();
@@ -70,12 +77,17 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             String name = stringSplit[2].trim();
             TaskStatus status = TaskStatus.valueOf(stringSplit[3].trim());
             String description = stringSplit[4].trim();
+            String startTimeAsString = stringSplit[7].trim();
+            LocalDateTime startTime = startTimeAsString.equals("null") ? null
+                    : LocalDateTime.parse(startTimeAsString, FORMAT_PATTERN);
 
             switch (Enum.valueOf(TaskTypes.class, stringSplit[1])) {
-                case TASK -> task = new Task(id, name, description, status);
+                case TASK -> task = new Task(id, name, description, status,
+                        Integer.parseInt(stringSplit[6].trim()), startTime);
                 case EPIC -> task = new Epic(id, name, description, status);
                 case SUBTASK -> task = new Subtask(id, name, description, status,
-                        Integer.parseInt(stringSplit[5].trim()));
+                        Integer.parseInt(stringSplit[5].trim()), Integer.parseInt(stringSplit[6].trim()),
+                        LocalDateTime.parse(stringSplit[7].trim(), FORMAT_PATTERN));
             }
             return task;
         } catch (NumberFormatException e) {
@@ -98,7 +110,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 task.getName(),
                 task.getStatus().toString(),
                 task.getDescription(),
-                ""
+                "",
+                task.getTaskType() == TaskTypes.EPIC ? "" : Long.toString(task.getDuration().toMinutes()),
+                task.getTaskType() == TaskTypes.EPIC || task.getStartTime() == null ? "null"
+                        : task.getStartTime().format(FORMAT_PATTERN)
         );
     }
 
@@ -110,7 +125,9 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 subtask.getName(),
                 subtask.getStatus().toString(),
                 subtask.getDescription(),
-                Integer.toString(subtask.getEpicId())
+                Integer.toString(subtask.getEpicId()),
+                Long.toString(subtask.getDuration().toMinutes()),
+                subtask.getStartTime() == null ? "null" : subtask.getStartTime().format(FORMAT_PATTERN)
         );
     }
 
@@ -187,6 +204,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     public void deleteEpicById(int id) {
         super.deleteEpicById(id);
         save();
+    }
+
+    @Override
+    public void calcAndSetEpicTime(Epic epic) {
+        super.calcAndSetEpicTime(epic);
     }
 
     public List<Task> getAll() {
