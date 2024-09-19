@@ -1,7 +1,11 @@
 package com.yandex.kanbanboard.service;
 
+import com.yandex.kanbanboard.exceptions.NotFoundException;
 import com.yandex.kanbanboard.exceptions.ValidationException;
-import com.yandex.kanbanboard.model.*;
+import com.yandex.kanbanboard.model.Epic;
+import com.yandex.kanbanboard.model.Subtask;
+import com.yandex.kanbanboard.model.Task;
+import com.yandex.kanbanboard.model.TaskStatus;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -133,15 +137,14 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
             throw new ValidationException("Подзадачи пересекаются");
         Epic epic = epics.get((subtask.getEpicId()));
         if (epic == null) {
-            System.out.println("Не найден эпик по подзадаче");
-            return null;
+            throw new NotFoundException("Не найден эпик по подзадаче");
         }
         final int id = ++taskCounter;
         subtask.setId(id);
         subTasks.put(subtask.getId(), subtask);
-        // не добавляем в TreeSet сортированный по дате старта, если дата старта не задана
         epic.addSubTaskToEpic(subtask.getId());
         updateEpicStatus(epic.getId());
+        // не добавляем в TreeSet сортированный по дате старта, если дата старта не задана
         if (subtask.getStartTime() != null) {
             sortedTasks.add(subtask);
             calcAndSetEpicTime(epics.get(subtask.getEpicId()));
@@ -169,7 +172,7 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     @Override
     public void updateTask(Task task) {
         if (!tasks.containsKey(task.getId())) {
-            System.out.println("Такой задачи нет");
+            throw new NotFoundException("Такой задачи нет");
         } else {
             tasks.replace(task.getId(), task);
         }
@@ -178,7 +181,7 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     @Override
     public void updateEpic(Epic epic) {
         if (!epics.containsKey(epic.getId())) {
-            System.out.println("Такого эпика нет");
+            throw new NotFoundException("Такого эпика нет");
         } else {
             epics.replace(epic.getId(), epic);
         }
@@ -187,7 +190,7 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
     @Override
     public void updateSubtask(Subtask subtask) {
         if (!subTasks.containsKey(subtask.getId())) {
-            System.out.println("Такой подзадачи нет");
+            throw new NotFoundException("Такой подзадачи нет");
         } else {
             subTasks.replace(subtask.getId(), subtask);
             updateEpicStatus(subtask.getEpicId());
@@ -212,6 +215,8 @@ public class InMemoryTaskManager extends InMemoryHistoryManager implements TaskM
 
     private void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
+        if (epic == null)
+            throw new NotFoundException("Не найден эпик по Id");
         List<Subtask> epicSubtasks = getSubtasksForEpic(epicId);
         if (epicSubtasks == null || epicSubtasks.stream()
                 .allMatch(x -> x.getStatus().equals(TaskStatus.NEW))) {

@@ -10,7 +10,7 @@ public class Task {
     private String description;
     // выставляем задаче статус NEW по дефолту
     private TaskStatus status = TaskStatus.NEW;
-    private final TaskTypes taskType = TaskTypes.TASK;
+    private TaskTypes taskType;
     //
     private Duration duration = Duration.ofMinutes(0);
     private LocalDateTime startTime;
@@ -92,7 +92,7 @@ public class Task {
     }
 
     public TaskTypes getTaskType() {
-        return taskType;
+        return TaskTypes.TASK;
     }
 
     public LocalDateTime getEndTime() {
