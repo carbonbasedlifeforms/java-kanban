@@ -3,12 +3,12 @@ package com.yandex.kanbanboard.api.handlers;
 import com.google.gson.JsonSyntaxException;
 import com.sun.net.httpserver.HttpExchange;
 import com.yandex.kanbanboard.exceptions.NotFoundException;
+import com.yandex.kanbanboard.exceptions.SendResponseException;
 import com.yandex.kanbanboard.exceptions.ValidationException;
 import com.yandex.kanbanboard.model.Task;
 import com.yandex.kanbanboard.model.TaskTypes;
 import com.yandex.kanbanboard.service.TaskManager;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -20,48 +20,43 @@ public class TaskHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) {
         try {
             String path = exchange.getRequestURI().getPath();
             switch (exchange.getRequestMethod()) {
                 case "GET" -> {
                     if (Pattern.matches("^" + PATH_ENTITY + "$", path))
-                        sendText(exchange, gson.toJson(taskManager.getAllTasks()));
+                        sendText(exchange, 200, gson.toJson(taskManager.getAllTasks()));
                     else if (Pattern.matches("^" + PATH_ENTITY + "/\\d+$", path)) {
                         Optional<Integer> taskId = getIdFromPath(exchange);
                         if (taskId.isEmpty() || taskManager.getTaskById(taskId.get()) == null) {
-                            sendNotFound(exchange);
+                            sendText(exchange, 404, "task not found");
                             return;
                         }
                         Task task = taskManager.getTaskById(taskId.get());
-                        sendText(exchange, gson.toJson(task));
+                        sendText(exchange, 200, gson.toJson(task));
                     } else {
-                        sendNotFound(exchange);
+                        sendText(exchange, 404, "task not found");
                     }
                 }
                 case "DELETE" -> {
                     if (Pattern.matches("^" + PATH_ENTITY + "/\\d+$", path)) {
                         Optional<Integer> taskId = getIdFromPath(exchange);
                         if (taskId.isEmpty() || taskManager.getTaskById(taskId.get()) == null) {
-                            sendNotFound(exchange);
+                            sendText(exchange, 404, "task not found");
                             return;
                         }
                         taskManager.deleteTaskById(taskId.get());
-                        sendText(exchange, "task " + taskId.get() + " deleted successfully");
+                        sendText(exchange, 200, "task " + taskId.get() + " deleted successfully");
                     } else {
-                        sendNotFound(exchange);
+                        sendText(exchange, 404, "task not found");
                     }
                 }
                 case "POST" -> {
-                    Task task;
-                    Optional<Task> taskOptional = parsePostBody(exchange.getRequestBody(), Task.class);
-                    if (taskOptional.isEmpty()) {
-                        sendBadRequest(exchange);
-                        return;
-                    }
-                    task = taskOptional.get();
+                    Task task = parsePostBody(exchange.getRequestBody(), Task.class)
+                            .orElseThrow(() -> new JsonSyntaxException("task body is not correct"));
                     if (!TaskTypes.TASK.equals(task.getTaskType())) {
-                        sendBadRequest(exchange);
+                        sendText(exchange, 400, "task type is not correct");
                         return;
                     }
                     if (task.getEndTime() == null) {
@@ -72,18 +67,20 @@ public class TaskHandler extends BaseHttpHandler {
                     } else {
                         taskManager.createTask(task);
                     }
-                    sendCreated(exchange);
+                    sendText(exchange, 201, "task created successfully");
                 }
-                default -> sendNotAllowed(exchange);
+                default -> sendText(exchange, 405, "method not allowed");
             }
         } catch (ValidationException e) {
-            sendHasInteractions(exchange, e.getMessage());
+            sendText(exchange, 406, e.getMessage());
         } catch (JsonSyntaxException e) {
-            sendBadRequest(exchange);
+            sendText(exchange, 400, e.getMessage());
         } catch (NotFoundException e) {
-            sendNotFound(exchange);
+            sendText(exchange, 404, e.getMessage());
+        } catch (SendResponseException e) {
+            e.printStackTrace();
         } catch (Exception e) {
-            sendInternalError(exchange);
+            sendText(exchange, 500, e.getMessage());
         }
     }
 }

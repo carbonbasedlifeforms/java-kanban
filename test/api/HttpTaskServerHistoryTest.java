@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTaskServerHistoryTest {
-    TaskManager manager = new InMemoryTaskManager();
-    HttpTaskServer taskServer = new HttpTaskServer(manager);
+    TaskManager manager;
+    HttpTaskServer taskServer;
 
     static HttpClient client;
     static URI url;
@@ -38,7 +38,7 @@ public class HttpTaskServerHistoryTest {
     Epic epic;
     Subtask subtask;
 
-    public HttpTaskServerHistoryTest() throws IOException {
+    public HttpTaskServerHistoryTest() {
     }
 
     @BeforeAll
@@ -48,10 +48,9 @@ public class HttpTaskServerHistoryTest {
     }
 
     @BeforeEach
-    public void setUp() {
-        manager.deleteAllTasks();
-        manager.deleteAllSubTasks();
-        manager.deleteAllEpics();
+    public void setUp() throws IOException {
+        manager = new InMemoryTaskManager();
+        taskServer = new HttpTaskServer(manager);
         taskServer.start();
         task = new Task("task 1", "Testing task 1",
                 TaskStatus.NEW, 5, LocalDateTime.now());

@@ -19,8 +19,8 @@ public class HttpTaskServer {
     private static final int PORT = 8080;
     private static final int BACKLOG = 0;
     private static final int DELAY = 1;
-    protected HttpServer httpServer;
-    protected TaskManager taskManager;
+    protected final HttpServer httpServer;
+    public final TaskManager taskManager;
 
     public HttpTaskServer() throws IOException {
         this(Managers.getDefault());
@@ -35,11 +35,6 @@ public class HttpTaskServer {
         httpServer.createContext("/history", new HistoryHandler(taskManager));
         httpServer.createContext("/prioritized", new PrioritizedHandler(taskManager));
 
-    }
-
-    public static void main(String[] args) throws IOException {
-        HttpTaskServer taskServer = new HttpTaskServer();
-        taskServer.start();
     }
 
     public static Gson getGson() {

@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -25,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpTaskServerPrioritizedTest {
-    private static final DateTimeFormatter FORMAT_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter FORMAT_PATTERN = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
-    TaskManager manager = new InMemoryTaskManager();
-    HttpTaskServer taskServer = new HttpTaskServer(manager);
+    TaskManager manager;
+    HttpTaskServer taskServer;
 
     static HttpClient client;
     static URI url;
@@ -38,7 +39,7 @@ public class HttpTaskServerPrioritizedTest {
     Task task;
     Task anotherTask;
 
-    public HttpTaskServerPrioritizedTest() throws IOException {
+    public HttpTaskServerPrioritizedTest() {
     }
 
     @BeforeAll
@@ -48,15 +49,14 @@ public class HttpTaskServerPrioritizedTest {
     }
 
     @BeforeEach
-    public void setUp() {
-        manager.deleteAllTasks();
-        manager.deleteAllSubTasks();
-        manager.deleteAllEpics();
+    public void setUp() throws IOException {
+        manager = new InMemoryTaskManager();
+        taskServer = new HttpTaskServer(manager);
         taskServer.start();
         task = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
-                LocalDateTime.parse("2024-09-03 12:00:00", FORMAT_PATTERN));
+                LocalDateTime.now().minus(Duration.ofHours(1)));
         anotherTask = new Task("Test add new Task", "Test task description", TaskStatus.NEW, 1,
-                LocalDateTime.parse("2024-09-03 11:00:00", FORMAT_PATTERN));
+                LocalDateTime.now());
     }
 
     @AfterEach

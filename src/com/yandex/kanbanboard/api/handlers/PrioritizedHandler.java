@@ -1,9 +1,9 @@
 package com.yandex.kanbanboard.api.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
+import com.yandex.kanbanboard.exceptions.SendResponseException;
 import com.yandex.kanbanboard.service.TaskManager;
 
-import java.io.IOException;
 import java.util.regex.Pattern;
 
 public class PrioritizedHandler extends BaseHttpHandler {
@@ -14,17 +14,19 @@ public class PrioritizedHandler extends BaseHttpHandler {
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
+    public void handle(HttpExchange exchange) {
         try {
             if (exchange.getRequestMethod().equals("GET")) {
                 if (Pattern.matches("^" + PATH_ENTITY + "$", exchange.getRequestURI().getPath())) {
-                    sendText(exchange, gson.toJson(taskManager.getPrioritizedTasks()));
+                    sendText(exchange, 200, gson.toJson(taskManager.getPrioritizedTasks()));
                 }
             } else {
-                sendNotAllowed(exchange);
+                sendText(exchange, 405, "Method not allowed");
             }
-        } catch (IOException e) {
-            sendInternalError(exchange);
+        } catch (SendResponseException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            sendText(exchange, 500, e.getMessage());
         }
     }
 }

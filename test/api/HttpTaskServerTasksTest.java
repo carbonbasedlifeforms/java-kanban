@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class HttpTaskServerTasksTest {
 
-    TaskManager manager = new InMemoryTaskManager();
-    HttpTaskServer taskServer = new HttpTaskServer(manager);
+    TaskManager manager;
+    HttpTaskServer taskServer;
     Gson gson = HttpTaskServer.getGson();
 
     static HttpClient client;
@@ -33,7 +33,7 @@ public class HttpTaskServerTasksTest {
     HttpResponse<String> response;
     HttpRequest request;
 
-    public HttpTaskServerTasksTest() throws IOException {
+    public HttpTaskServerTasksTest() {
     }
 
     @BeforeAll
@@ -44,9 +44,8 @@ public class HttpTaskServerTasksTest {
 
     @BeforeEach
     public void setUp() throws IOException, InterruptedException {
-        manager.deleteAllTasks();
-        manager.deleteAllSubTasks();
-        manager.deleteAllEpics();
+        manager = new InMemoryTaskManager();
+        taskServer = new HttpTaskServer(manager);
         taskServer.start();
         Task task = new Task("Test 2", "Testing task 2",
                 TaskStatus.NEW, 5, LocalDateTime.now());
