@@ -1,11 +1,8 @@
 package com.yandex.kanbanboard;
 
 import com.yandex.kanbanboard.api.HttpTaskServer;
-import com.yandex.kanbanboard.model.Task;
-import com.yandex.kanbanboard.model.TaskStatus;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 
 public class Main {
 
@@ -13,11 +10,11 @@ public class Main {
         System.out.println("Поехали!");
 //        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 //        FileBackedTaskManager fileManager = FileBackedTaskManager.loadFromFile(Paths.get("bcp.csv").toFile());
-
+//        TaskManager taskManager = Managers.getDefault();
         HttpTaskServer taskServer = new HttpTaskServer();
-        Task task23 = new Task("Task 23", "Description 23", TaskStatus.NEW,
-                200, LocalDateTime.now());
-        taskServer.taskManager.createTask(task23);
+//        Task task23 = new Task("Task 23", "Description 23", TaskStatus.NEW,
+//                200, LocalDateTime.now());
+//        taskManager.createTask(task23);
         taskServer.start();
 
 //        System.out.println(fileManager.getAllTasks());

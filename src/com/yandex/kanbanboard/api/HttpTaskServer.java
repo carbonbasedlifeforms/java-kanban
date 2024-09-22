@@ -20,7 +20,7 @@ public class HttpTaskServer {
     private static final int BACKLOG = 0;
     private static final int DELAY = 1;
     protected final HttpServer httpServer;
-    public final TaskManager taskManager;
+    protected final TaskManager taskManager;
 
     public HttpTaskServer() throws IOException {
         this(Managers.getDefault());
