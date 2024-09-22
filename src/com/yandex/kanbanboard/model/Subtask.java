@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 public class Subtask extends Task {
     private final int epicId;
-    private final TaskTypes taskType = TaskTypes.SUBTASK;
 
     public Subtask(String name, String description, TaskStatus status, int epicId) {
         super(name, description, status);
@@ -44,7 +43,7 @@ public class Subtask extends Task {
 
     @Override
     public TaskTypes getTaskType() {
-        return taskType;
+        return TaskTypes.SUBTASK;
     }
 
     @Override
